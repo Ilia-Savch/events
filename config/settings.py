@@ -229,3 +229,50 @@ SIMPLE_JWT = {
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+#################################
+# REDIS
+#################################
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        # change port to redis://redis:6379 and terminate Redis process
+        "LOCATION": "redis://redis:6379",
+        "OPTIONS": {
+            "db": "1",
+        },
+    }
+}
+
+#################################
+# CELERY
+#################################
+
+# временная зона
+CELERY_TIMEZONE = TIME_ZONE
+
+# к какому redis обращаться
+REDIS_HOST = env.str('REDIS_HOST', default='redis')
+REDIS_PORT = env.str('REDIS_PORT', default=6379)
+
+# брокер сообщений и бэкэнд результатов
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+
+# что использовать в качестве сериализатора, для передачи данных,
+# дял бэкэнда результатов
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+# если в задаче произошла ошибка, пробрасывать эту ошибку на верх или нет
+CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
+
+# максимальное время исполнения задачи
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+# указываем какой модуль:класс использовать для шедуллера(периодические задачи)
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+# Флаг отслеживания выполнения задач
+CELERY_TASK_TRACK_STARTED = True

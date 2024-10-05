@@ -31,12 +31,12 @@ class RegistrationView(generics.CreateAPIView):
         summary='Смена пароля', tags=['Аутентификация & Авторизация']),
 )
 class ChangePasswordView(APIView):
+    serializer_class = user_s.ChangePasswordSerializer
 
     def post(self, request):
         user = request.user
-        serializer = user_s.ChangePasswordSerializer(
-            instance=user, data=request.data
-        )
+        serializer = self.serializer_class(instance=user, data=request.data)
+
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=HTTP_204_NO_CONTENT)
@@ -52,8 +52,11 @@ class MeView(RetrieveUpdateAPIView):
     serializer_class = user_s.MeSerializer
     http_method_names = ('get', 'patch')
 
+    lookup_field = 'pk'
+
     def get_object(self):
-        return self.request.user
+        return User.objects.prefetch_related(
+            'events', 'events__photos').get(pk=self.request.user.pk)
 
 
 @extend_schema_view(
@@ -62,7 +65,7 @@ class MeView(RetrieveUpdateAPIView):
 )
 class UserView(RetrieveViewSet):
     queryset = User.objects.exclude(
-        is_superuser=True).prefetch_related('events')
+        is_superuser=True).prefetch_related('events', 'events__photos')
     serializer_class = user_s.MeSerializer
 
 

@@ -59,6 +59,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         password = validated_data.pop("new_password")
         instance.set_password(password)
         instance.save()
+        return instance
 
 
 class UserSearchListSerializer(serializers.ModelSerializer):

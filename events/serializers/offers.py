@@ -25,19 +25,7 @@ class OfferListSerializer(serializers.ModelSerializer):
             "visitor",
             "created_at",
             "updated_at",
-        )
-
-
-class OfferRetrieveSerializer(serializers.ModelSerializer):
-    desired_event = EventSearchListSerializer()
-
-    class Meta:
-        model = Offer
-        fields = (
-            "id",
-            "desired_event",
             "message",
-            "event_accept",
         )
 
 #######################################

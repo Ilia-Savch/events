@@ -33,6 +33,9 @@ class ValidateDateSerializer(ExtendedModelSerializer):
         abstract = True
 
     def validate_date(self, attrs):
+        if "date_start" not in attrs or "date_end" not in attrs:
+            return attrs
+
         today = date.today()
         date_start = attrs["date_start"]
         date_end = attrs["date_end"]

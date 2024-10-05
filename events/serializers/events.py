@@ -1,14 +1,14 @@
+import requests
 from rest_framework import serializers
 
 from events.models.events import Event
 from events.serializers.events_photos import EventPhotoSerializer
 from rest_framework.exceptions import ParseError
 from common.serializers.mixins import ValidateDateSerializer
-from datetime import date
 
 from geopy import Yandex
 
-from users.serializers.users import MeSerializer
+from users.serializers.users import UserSearchListSerializer
 
 
 class EventSearchListSerializer(serializers.ModelSerializer):
@@ -25,7 +25,7 @@ class EventSearchListSerializer(serializers.ModelSerializer):
 
 class EventRetrieveSerializer(serializers.ModelSerializer):
     photos = EventPhotoSerializer(many=True)
-    organizer = MeSerializer()
+    organizer = UserSearchListSerializer()
 
     class Meta:
         model = Event
@@ -71,6 +71,7 @@ class EventCreateSerializer(ValidateDateSerializer):
         return super().validate_date(attrs)
 
     #! убрать условие
+    #! убрать api_key в env
     def create(self, validated_data):
         adress = validated_data["adress"]
         if adress == "":
@@ -97,7 +98,6 @@ class EventUpdateSerializer(ValidateDateSerializer):
             "name",
             "adress",
             "description",
-            "is_private",
             "date_start",
             "date_end",
             "price",
@@ -109,19 +109,28 @@ class EventUpdateSerializer(ValidateDateSerializer):
         return super().validate_date(attrs)
 
     def update(self, instance, validated_data):
-        adress = validated_data.pop("adress")
+        old_adress = instance.adress
+        adress = validated_data.get("adress", None)
 
-        location = Yandex(
-            api_key="54e34056-8d9c-435d-84b8-d68729ef0897").geocode(adress)
-        if location == None:
-            raise ParseError("Адрес не найден")
+        if old_adress != adress:
+            try:
+                location = Yandex(
+                    api_key="54e34056-8d9c-435d-84b8-d68729ef0897").geocode(adress)
+                if location == None:
+                    raise ParseError("Адрес не найден")
 
-        longitude = location.longitude
-        latitude = location.latitude
+                longitude = location.longitude
+                latitude = location.latitude
 
-        instance.adress = adress
-        instance.longitude = longitude
-        instance.latitude = latitude
+                instance.adress = adress
+                instance.longitude = longitude
+                instance.latitude = latitude
+            except requests.RequestException as e:
+                raise ParseError(f"Ошибка при запросе к геокодеру: {str(e)}")
+
+        # Обновление всех остальных полей экземпляра модели
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
 
         instance.save()
 

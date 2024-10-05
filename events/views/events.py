@@ -5,7 +5,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 
-from common.views.mixins import ExtendedGenericViewSet, CRUDViewSet, ListViewSet
+from django.core.cache import cache
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
+from common.views.mixins import ExtendedGenericViewSet, CRUDViewSet, ListViewSet, clear_cache, get_cached_queryset, log_db_queries
 from events.backends import MyEventsFilter
 from events.filters import DateTimeFilter
 from events.permissions import IsOrganiserOrReadOnly, IsOwner, IsParticipantInPrivateEvent
@@ -13,8 +17,36 @@ from events.serializers import events as events_s
 from events.serializers import events_photos as events_photos_s
 from events.serializers import common as common_s
 from datetime import date
+import time
 
 from events.models.events import Event, EventPhoto
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+# EventView
+
+
+@receiver(post_save, sender=Event)
+def clear_event_cache_on_save(sender, instance, **kwargs):
+    clear_cache(instance, prefix="events_queryset")
+
+
+@receiver(post_delete, sender=Event)
+def clear_event_cache_on_delete(sender, instance, **kwargs):
+    clear_cache(instance, prefix="events_queryset")
+
+# MyEventView
+
+
+@receiver(post_save, sender=User)
+def clear_event_cache_on_save(sender, instance, **kwargs):
+    clear_cache(instance, prefix="my_events_list_queryset")
+
+
+@receiver(post_delete, sender=User)
+def clear_event_cache_on_delete(sender, instance, **kwargs):
+    clear_cache(instance, prefix="my_events_list_queryset")
 
 
 @extend_schema_view(
@@ -40,11 +72,12 @@ class EventView(CRUDViewSet):
     }
     http_method_names = ("get", "post", "patch", "delete")
 
+    @log_db_queries
     def get_queryset(self):
-        queryset = Event.objects.select_related(
-            "organizer",
-        )
-        return queryset
+        event_id = self.kwargs.get('pk')
+        cache_key = f"events_queryset_{event_id}"
+
+        return get_cached_queryset(Event, cache_key, ["organizer",], ["photos", "participants_event",])
 
 
 @extend_schema_view(
@@ -86,11 +119,11 @@ class EventListView(ListViewSet):
         "date_start",
     )
 
+    @log_db_queries
     def get_queryset(self):
-        queryset = Event.objects.select_related(
-            "organizer",
-        ).filter(date_end__gte=date.today())
-        return queryset
+        cache_key = f"events_list_queryset"
+
+        return get_cached_queryset(Event, cache_key, ["organizer",], ["photos",], timeout=5*60)
 
 
 @extend_schema_view(
@@ -131,11 +164,12 @@ class MyEventView(ListViewSet):
         "organizer",
     )
 
+    @log_db_queries
     def get_queryset(self):
-        queryset = Event.objects.select_related(
-            "organizer",
-        )
-        return queryset
+        user_id = self.request.user.id
+        cache_key = f"my_events_list_queryset_{user_id}"
+
+        return get_cached_queryset(Event, cache_key, ["organizer",], ["photos",])
 
 
 @extend_schema_view(
