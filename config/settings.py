@@ -251,12 +251,13 @@ CACHES = {
 # временная зона
 CELERY_TIMEZONE = TIME_ZONE
 
-# к какому redis обращаться
-REDIS_HOST = env.str('REDIS_HOST', default='redis')
-REDIS_PORT = env.str('REDIS_PORT', default=6379)
+# # к какому redis обращаться
+# REDIS_HOST = env.str('REDIS_HOST', default='redis')
+# REDIS_PORT = env.str('REDIS_PORT', default=6379)
 
-# брокер сообщений и бэкэнд результатов
-CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+# # брокер сообщений и бэкэнд результатов
+# CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+CELERY_BROKER_URL = "redis://redis:6379/0"
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
 # что использовать в качестве сериализатора, для передачи данных,
@@ -276,3 +277,14 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 # Флаг отслеживания выполнения задач
 CELERY_TASK_TRACK_STARTED = True
+
+#################################
+# E-mail smpt configuration
+#################################
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.mail.ru'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = 2525
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
