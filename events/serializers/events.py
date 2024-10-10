@@ -1,3 +1,4 @@
+import os
 import requests
 from rest_framework import serializers
 
@@ -70,14 +71,10 @@ class EventCreateSerializer(ValidateDateSerializer):
     def validate(self, attrs):
         return super().validate_date(attrs)
 
-    #! убрать условие
-    #! убрать api_key в env
     def create(self, validated_data):
         adress = validated_data["adress"]
-        if adress == "":
-            return Event.objects.create(**validated_data)
         location = Yandex(
-            api_key="54e34056-8d9c-435d-84b8-d68729ef0897").geocode(adress)
+            api_key=os.getenv("API_KEY")).geocode(adress)
         if location == None:
             raise ParseError("Адрес не найден")
         longitude = location.longitude

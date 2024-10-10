@@ -101,16 +101,7 @@ DATABASES = {
     },
 }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('PG_DATABASE'),
-#         'USER': os.getenv('PG_USER'),
-#         'PASSWORD': os.getenv('PG_PASSWORD'),
-#         'HOST': os.getenv('DB_HOST'),
-#         'PORT': os.getenv('DB_PORT'),
-#     }
-# }
+
 AUTH_USER_MODEL = "users.User"
 AUTHENTICATION_BACKENDS = ("users.models.backends.AuthBackends",)
 
