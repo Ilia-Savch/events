@@ -60,10 +60,10 @@ class OfferEventView(LUDViewSet):
     ]
 
     queryset = Offer.objects.all()
-    serializer_class = offers_s.OfferListSerializer
+    serializer_class = offers_s.OfferListEventsSerializer
 
     multi_serializer_class = {
-        'list': offers_s.OfferListSerializer,
+        'list': offers_s.OfferListEventsSerializer,
         'partial_update': offers_s.OfferUpdateEventSerializer,
     }
 
@@ -105,9 +105,9 @@ class OfferUserView(LUDViewSet):
         IsOwnerOfferUser,
     ]
     queryset = Offer.objects.all()
-    serializer_class = offers_s.OfferListSerializer
+    serializer_class = offers_s.OfferListUserSerializer
     multi_serializer_class = {
-        'list': offers_s.OfferListSerializer,
+        'list': offers_s.OfferListUserSerializer,
         'partial_update': offers_s.OfferUpdateUserSerializer,
     }
     http_method_names = ("get", 'patch', 'post', 'delete')
@@ -131,7 +131,7 @@ class OfferUserView(LUDViewSet):
         cache_key = f"offers_user_queryset_{user_id}"
 
         return get_cached_queryset(
-            Offer, cache_key, ['desired_event', 'visitor'],
+            Offer, cache_key, ['desired_event',],
         )
 
 

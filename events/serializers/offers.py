@@ -12,9 +12,13 @@ from django.db import transaction
 from django.utils import timezone
 
 
-class OfferListSerializer(serializers.ModelSerializer):
+#######################################
+# SERIALIZERS REQUEST FOR USER
+#######################################
+
+
+class OfferListUserSerializer(serializers.ModelSerializer):
     desired_event = EventSearchListSerializer()
-    visitor = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Offer
@@ -22,15 +26,10 @@ class OfferListSerializer(serializers.ModelSerializer):
             "id",
             "desired_event",
             "event_accept",
-            "visitor",
             "created_at",
             "updated_at",
             "message",
         )
-
-#######################################
-# SERIALIZERS REQUEST FOR USER
-#######################################
 
 
 class OfferCreateSerializer(ExtendedModelSerializer):
@@ -95,6 +94,22 @@ class OfferUpdateUserSerializer(serializers.ModelSerializer):
 #######################################
 # SERIALIZERS REQUEST FOR EVENT OWENER
 #######################################
+
+class OfferListEventsSerializer(serializers.ModelSerializer):
+    desired_event = EventSearchListSerializer()
+    visitor = UserSearchListSerializer()
+
+    class Meta:
+        model = Offer
+        fields = (
+            "id",
+            "desired_event",
+            "event_accept",
+            "visitor",
+            "created_at",
+            "updated_at",
+            "message",
+        )
 
 
 class OfferUpdateEventSerializer(serializers.ModelSerializer):
