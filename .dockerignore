@@ -6,4 +6,4 @@ __pycache__/
 *.pyo
 *.pyd
 *.db
-# .celerybeat-schedule
+.celerybeat-schedule

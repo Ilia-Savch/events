@@ -4,16 +4,14 @@ from common.models.mixins import DateMixin
 
 User = get_user_model()
 
-#! убрать null=True, blank=True
-
 
 class Event(DateMixin):
-    adress = models.CharField('Адрес', max_length=500, null=True, blank=True)
+    adress = models.CharField('Адрес', max_length=500,)
     name = models.CharField('Название', max_length=500,)
     description = models.TextField('Описание', null=True, blank=True)
     is_private = models.BooleanField("Приватное событие", default=False)
-    longitude = models.FloatField('Долгота', null=True, blank=True)
-    latitude = models.FloatField('Широта', null=True, blank=True)
+    longitude = models.FloatField('Долгота',)
+    latitude = models.FloatField('Широта',)
     price = models.PositiveIntegerField('Цена', default=0)
     date_start = models.DateTimeField('Дата начала')
     date_end = models.DateTimeField('Дата конца')
