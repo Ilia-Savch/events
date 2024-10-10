@@ -1,0 +1,101 @@
+services:
+  events:
+    build: 
+      context: .
+    container_name: events
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./.env
+    volumes:
+      - .:/app 
+
+  postgres:
+    image: postgres:16.3
+    container_name: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+    ports:
+      - "5432:5432"
+
+
+  redis:
+    image: redis:7.4
+    container_name: redis
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning 
+    volumes: 
+      - redis_data:/data
+    env_file:
+      - ./.env
+
+  redisinsight:
+    image: redislabs/redisinsight:1.11.0
+    container_name: redisinsight
+    restart: always
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+    volumes:
+      - redisinsight_data:/db 
+
+  worker:
+    build:
+      context: .
+    hostname: worker
+    container_name: worker
+    entrypoint: celery
+    command: -A config.celery.app worker --loglevel=info
+    volumes:
+      - .:/app
+    links:
+      - redis
+    depends_on:
+      - redis
+      - postgres
+    env_file:
+      - ./.env
+  
+  beat:
+    build:
+      context: .
+    container_name: beat
+    entrypoint: celery
+    command: -A config.celery.app beat --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - worker
+      - redis
+  
+  flower:
+    build: 
+      context: .
+    hostname: flower
+    container_name: flower
+    entrypoint: celery
+    command: -A config.celery.app flower
+    volumes:
+      - .:/app
+    links:
+      - redis
+    depends_on:
+      - redis
+    ports:
+      - "5555:5555"
+    env_file:
+      - ./.env
+
+
+volumes:
+  postgres_data:
+  redis_data:
+  redisinsight_data:
